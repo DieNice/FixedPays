@@ -4,7 +4,7 @@ import re
 graph = []
 fines = {}
 
-def get_dict_adj(input_nodes:str):
+def get_dict_adj(input_nodes:str)->Dict:
     result = {}
     if input_nodes=="":
         return result
@@ -19,26 +19,7 @@ def get_dict_adj(input_nodes:str):
             buf = [ int(j) for j in arc.split(',')]
             buf[2] = bool(buf[2])
             result[buf[0]] = (buf[1],buf[2])
-    return result
-
-def main():
-    num_nodes = int(input("Введите количество вершин:"))
-    print("""Введите для каждого вершины с чем она соединена
-          "Номер вершины:(Номер вершины,плата,штраф за поворот из исходной вершины в эту, 1 или 0)
-           1 - штрафовать за поворот по этой дуге
-           0 - не штрафовать
-           Пример:
-           1:(2,5,0)
-           2:(3,7,0)(5,6,1)
-           ....
-           """)
-    for i in range(num_nodes):
-        input_nodes = input(f"{i+1}:")
-        graph.append(get_dict_adj(input_nodes))    
-          
-def test():
-    graph = add_fake_nodes(test_graph)
-    build_fake_graph(graph) 
+    return result    
 
 test_graph = [
     # {1:(0,0)},#S #0
@@ -62,28 +43,74 @@ def get_num_arcs(graph)->int:
             count+=1
     return count
 
+def get_num_arc(graph, num_line, num_row )->int:
+    count = 0
+    for index,node in enumerate(graph):
+        for row,_ in enumerate(node):
+            count += 1
+            if index == num_line and row == num_row:
+                return count - 1
+    
+
 def build_fake_graph(graph):
     num_fake_nods = get_num_arcs(graph)
-    fake_graph = [ dict() for _ in range(num_fake_nods)]
-    for node in graph:
+    fake_graph = [dict() for i in range(num_fake_nods)]
+    
+    input = 0
+    for index,node in enumerate(graph):
         for key, value in node.items():
             if key == "T":
                 return fake_graph
             next_node = graph[key]
+            row = 0
             for _, need in next_node.items():
                 if need[2]:
                     coast = value[0] + value[1]
                 else:
-                    coast = value[0]               
-            
-            
+                    coast = value[0]
+                output = get_num_arc(graph,key,row)
+                fake_graph[input][output] = coast
+                row+=1
+            input += 1   
 
+def print_graph(graph):      
+    for i,node in enumerate(graph):
+        print(f"L{i}: {node}")
+        
 def add_fake_nodes(graph):
     g = graph.copy()
     g.append({"T": (0,0, True)})
     S1 = {1:(0,0, True)}
     g.insert(0,S1)
     return g
+
+def test():
+    print("Graph")
+    print_graph(test_graph)
+    graph = add_fake_nodes(test_graph)
+    fake_graph = build_fake_graph(graph) 
+    print("Fake network")
+    print_graph(fake_graph)  
+    
+def main():
+    num_nodes = int(input("Введите количество вершин:"))
+    print("""Введите для каждого вершины с чем она соединена
+          "Номер вершины:(Номер вершины,плата,штраф за поворот из исходной вершины в эту, 1 или 0)
+           1 - штрафовать за поворот по этой дуге
+           0 - не штрафовать
+           Пример:
+           1:(2,5,0)
+           2:(3,7,0)(5,6,1)
+           ....
+           """)
+    graph = []
+    for i in range(num_nodes):
+        input_nodes = input(f"{i+1}:")
+        graph.append(get_dict_adj(input_nodes))
+        graph = add_fake_nodes(test_graph)
+        fake_graph = build_fake_graph(graph)
+        print("Fake network")
+        print_graph(fake_graph)           
 
 if __name__=="__main__":
     # main()
