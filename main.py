@@ -1,4 +1,5 @@
 from typing import Tuple, List, Dict
+from dijkstra import shortestPath
 import re
 
 
@@ -106,6 +107,10 @@ def test() -> None:
     fake_graph = build_fake_graph(graph)
     print("Fake network")
     print_graph(fake_graph)
+    final_vertex = len(fake_graph) - 1
+    result, distances = shortestPath(fake_graph, 0, final_vertex)
+    print(f"Path:{result}")
+    print(f"Coast:{distances[final_vertex]}")
 
 
 def main() -> None:
@@ -128,6 +133,10 @@ def main() -> None:
         fake_graph = build_fake_graph(graph)
         print("Fake network")
         print_graph(fake_graph)
+        final_vertex = len(fake_graph) - 1
+        result, distances = shortestPath(fake_graph, 0, final_vertex)
+        print(f"Path:{result}")
+        print(f"Coast:{distances[final_vertex]}")
 
 
 if __name__ == "__main__":
