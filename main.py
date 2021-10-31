@@ -1,30 +1,7 @@
 from typing import Tuple, List, Dict
 from dijkstra import shortestPath
-import re
 
-
-def get_dict_adj(input_nodes: str) -> Dict[int, Tuple[int, int, bool]]:
-    '''Функция возвращает словарь инцедентных вершиш вместе с их платой за перемещение в них, штрафом за поворот
-    и булевым значением выполняется ли штраф за вхождение в эту вершину'''
-    result = {}
-    if input_nodes == "":
-        return result
-    pattern = r"(\(\d+,\d+,\d+,[10]\)){1,2}"
-    matched_nodes = re.match(pattern, input_nodes)
-    if not matched_nodes:
-        raise ValueError("Неверно введены данные")
-    else:
-        res = matched_nodes.group(0)
-        parsed_data = [arc.replace('(', '').replace(')', '')
-                       for arc in res.split(")(")]
-        for arc in parsed_data:
-            buf = [int(j) for j in arc.split(',')]
-            buf[2] = bool(buf[2])
-            result[buf[0]] = (buf[1], buf[2], buf[3])
-    return result
-
-
-# тестовые данные
+# тестовые данные False - Дуга горизонтально направлена , True -  вертикально
 test_graph = [
     # {1:(0,0, False)},#S #0
     {2: (5, 3, False)},  # 1
@@ -74,6 +51,23 @@ def get_num_arc(graph: List[Dict[int, Tuple[int, int, bool]]], num_line: int, nu
                 return count - 1
 
 
+def restore_path(graph:  List[Dict[int, Tuple[int, int, bool]]], path: List[int]) -> List:
+    '''Восстанвилваем исходный путь'''
+    result_path = []
+    index_path = 0
+    for index_line, node in enumerate(graph):
+        index_row = 0
+        for k, _ in node.items():
+            if path[index_path] == get_num_arc(graph, index_line, index_row):
+                result_path.append(index_line)
+                
+                
+                index_path += 1
+            index_row += 1
+    result_path.pop(0)
+    return result_path
+
+
 def build_fake_graph(graph: List[Dict[int, Tuple[int, int, bool]]]) -> List[Dict[int, int]]:
     '''Строим фиктивную сеть'''
     num_fake_nods = get_num_arcs(graph)
@@ -98,10 +92,21 @@ def build_fake_graph(graph: List[Dict[int, Tuple[int, int, bool]]]) -> List[Dict
             input += 1
 
 
+def print_fake_graph(graph: List[Dict[int, int]]) -> None:
+    '''Вывод фейкового графа'''
+    index_last = len(graph) - 1
+    for i, node in enumerate(graph):
+        if i == 0:
+            print(f"S:{node}")
+        elif i == index_last:
+            print(f"T")
+        print(f"L{i}: {node}")
+
+
 def print_graph(graph: List[Dict[int, int]]) -> None:
     '''Вывод графа'''
     for i, node in enumerate(graph):
-        print(f"{i}: {node}")
+        print(f"{i + 1}: {node}")
 
 
 def add_fake_nodes(graph: List[Dict[int, Tuple[int, int, bool]]]) -> List[Dict[int, Tuple[int, int, bool]]]:
@@ -113,48 +118,20 @@ def add_fake_nodes(graph: List[Dict[int, Tuple[int, int, bool]]]) -> List[Dict[i
     return g
 
 
-def test() -> None:
+def main(graph) -> None:
     '''Запуск программы с тестовыми данными'''
     print("Graph")
-    print_graph(test_graph_2)
-    graph = add_fake_nodes(test_graph_2)
-    fake_graph = build_fake_graph(graph)
-    print("Fake network")
-    print_graph(fake_graph)
-    final_vertex = len(fake_graph) - 1
-    result, distances = shortestPath(fake_graph, 0, final_vertex)
-    print(f"Path:{result}")
-    print(f"Coast:{distances[final_vertex]}")
-
-
-def main() -> None:
-    '''Запуск программы с вводом'''
-    num_nodes = int(input("Введите количество вершин:"))
-    print("Первая вершина - вход, последня - выход")
-    print("""Введите для каждого вершины с чем она соединена
-          "Номер вершины:(Номер вершины,плата,штраф за поворот из исходной вершины в эту, 1 или 0)
-           1 - штрафовать за поворот по этой дуге
-           0 - не штрафовать
-           Пример:
-           1:(2,5,0,0)
-           2:(3,7,2,0)(5,6,4,1)
-           ....
-           """)
-    graph = []
-    for i in range(num_nodes):
-        input_nodes = input(f"{i+1}:")
-        graph.append(get_dict_adj(input_nodes))
+    print_graph(graph)
     graph = add_fake_nodes(graph)
     fake_graph = build_fake_graph(graph)
     print("Fake network")
-    print_graph(fake_graph)
+    print_fake_graph(fake_graph)
     final_vertex = len(fake_graph) - 1
     result, distances = shortestPath(fake_graph, 0, final_vertex)
+    result = restore_path(graph, result)
     print(f"Path:{result}")
     print(f"Coast:{distances[final_vertex]}")
 
 
 if __name__ == "__main__":
-    '''Раскоииентировать нужную и закоментировать ненужную'''
-    # main()
-    test()
+    main(test_graph_2)
