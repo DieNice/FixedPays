@@ -9,7 +9,7 @@ def get_dict_adj(input_nodes: str) -> Dict[int, Tuple[int, int, bool]]:
     result = {}
     if input_nodes == "":
         return result
-    pattern = r"(\(\d+,\d+,[10]\)){1,2}"
+    pattern = r"(\(\d+,\d+,\d+,[10]\)){1,2}"
     matched_nodes = re.match(pattern, input_nodes)
     if not matched_nodes:
         raise ValueError("Неверно введены данные")
@@ -20,24 +20,37 @@ def get_dict_adj(input_nodes: str) -> Dict[int, Tuple[int, int, bool]]:
         for arc in parsed_data:
             buf = [int(j) for j in arc.split(',')]
             buf[2] = bool(buf[2])
-            result[buf[0]] = (buf[1], buf[2])
+            result[buf[0]] = (buf[1], buf[2], buf[3])
     return result
 
 
 # тестовые данные
 test_graph = [
-    # {1:(0,0)},#S #0
+    # {1:(0,0, False)},#S #0
     {2: (5, 3, False)},  # 1
     {3: (7, 5, False), 5: (6, 6, True)},  # 2
     {4: (4, 4, False), 6: (5, 0, True)},  # 3
     {7: (3, 8, True)},  # 4
-    {6: (1, 7, True), 8: (3, 3, False)},  # 5
+    {6: (1, 7, False), 8: (3, 3, True)},  # 5
     {9: (5, 2, True)},  # 6
-    {6: (4, 5, True), 10: (8, 4, False)},  # 7
-    {9: (7, 0, True)},  # 8
-    {10: (2, 0, True)},  # 9
-    {11: (1, 0, True)},  # 10
-    # {"T": (0,0,True)} #11
+    {6: (4, 5, False), 10: (8, 4, True)},  # 7
+    {9: (7, 0, False)},  # 8
+    {10: (2, 0, False)},  # 9
+    {11: (1, 0, False)},  # 10
+    # {"T": (0,0,False)} #11
+]
+
+test_graph_2 = [
+    # 0: {1:(0,0,False)}
+    {2: (1, 3, False)},  # 1
+    {6: (3, 3, False), 3: (2, 3, True)},  # 2
+    {4: (2, 3, False)},  # 3
+    {8: (4, 3, False)},  # 4
+    {7: (6, 3, False), 4: (2, 3, True)},  # 5
+    {5: (1, 3, False)},  # 6
+    {8: (3, 3, True)},  # 7
+    # {T: (0,0, False)}
+
 ]
 
 
@@ -74,10 +87,11 @@ def build_fake_graph(graph: List[Dict[int, Tuple[int, int, bool]]]) -> List[Dict
             next_node = graph[key]
             row = 0
             for _, need in next_node.items():
-                if need[2]:
-                    coast = value[0] + value[1]
-                else:
+                if ((need[2] + value[2]) % 2) == 0:
                     coast = value[0]
+
+                else:
+                    coast = value[0] + value[1]
                 output = get_num_arc(graph, key, row)
                 fake_graph[input][output] = coast
                 row += 1
@@ -93,8 +107,8 @@ def print_graph(graph: List[Dict[int, int]]) -> None:
 def add_fake_nodes(graph: List[Dict[int, Tuple[int, int, bool]]]) -> List[Dict[int, Tuple[int, int, bool]]]:
     '''Добавляем фиктивные узлы'''
     g = graph.copy()
-    g.append({"T": (0, 0, True)})
-    S1 = {1: (0, 0, True)}
+    g.append({"T": (0, 0, False)})
+    S1 = {1: (0, 0, False)}
     g.insert(0, S1)
     return g
 
@@ -102,8 +116,8 @@ def add_fake_nodes(graph: List[Dict[int, Tuple[int, int, bool]]]) -> List[Dict[i
 def test() -> None:
     '''Запуск программы с тестовыми данными'''
     print("Graph")
-    print_graph(test_graph)
-    graph = add_fake_nodes(test_graph)
+    print_graph(test_graph_2)
+    graph = add_fake_nodes(test_graph_2)
     fake_graph = build_fake_graph(graph)
     print("Fake network")
     print_graph(fake_graph)
@@ -116,27 +130,28 @@ def test() -> None:
 def main() -> None:
     '''Запуск программы с вводом'''
     num_nodes = int(input("Введите количество вершин:"))
+    print("Первая вершина - вход, последня - выход")
     print("""Введите для каждого вершины с чем она соединена
           "Номер вершины:(Номер вершины,плата,штраф за поворот из исходной вершины в эту, 1 или 0)
            1 - штрафовать за поворот по этой дуге
            0 - не штрафовать
            Пример:
-           1:(2,5,0)
-           2:(3,7,0)(5,6,1)
+           1:(2,5,0,0)
+           2:(3,7,2,0)(5,6,4,1)
            ....
            """)
     graph = []
     for i in range(num_nodes):
         input_nodes = input(f"{i+1}:")
         graph.append(get_dict_adj(input_nodes))
-        graph = add_fake_nodes(test_graph)
-        fake_graph = build_fake_graph(graph)
-        print("Fake network")
-        print_graph(fake_graph)
-        final_vertex = len(fake_graph) - 1
-        result, distances = shortestPath(fake_graph, 0, final_vertex)
-        print(f"Path:{result}")
-        print(f"Coast:{distances[final_vertex]}")
+    graph = add_fake_nodes(graph)
+    fake_graph = build_fake_graph(graph)
+    print("Fake network")
+    print_graph(fake_graph)
+    final_vertex = len(fake_graph) - 1
+    result, distances = shortestPath(fake_graph, 0, final_vertex)
+    print(f"Path:{result}")
+    print(f"Coast:{distances[final_vertex]}")
 
 
 if __name__ == "__main__":
