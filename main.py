@@ -1,6 +1,7 @@
 from typing import Tuple, List, Dict
 from dijkstra import shortestPath
 
+
 # тестовые данные False - Дуга горизонтально направлена , True -  вертикально
 test_graph = [
     # {1:(0,0, False)},#S #0
@@ -100,7 +101,8 @@ def print_fake_graph(graph: List[Dict[int, int]]) -> None:
             print(f"S:{node}")
         elif i == index_last:
             print(f"T")
-        print(f"L{i}: {node}")
+        else:
+            print(f"L{i}: {node}")
 
 
 def print_graph(graph: List[Dict[int, int]]) -> None:
@@ -117,6 +119,14 @@ def add_fake_nodes(graph: List[Dict[int, Tuple[int, int, bool]]]) -> List[Dict[i
     g.insert(0, S1)
     return g
 
+def generate_graph(num_vertex:int):
+    '''Генерирует граф'''
+    graph = []
+    if num_vertex % 2 == 0:
+        pass
+    else:
+        
+
 
 def main(graph) -> None:
     '''Запуск программы с тестовыми данными'''
@@ -131,6 +141,7 @@ def main(graph) -> None:
     result = restore_path(graph, result)
     print(f"Path:{result}")
     print(f"Coast:{distances[final_vertex]}")
+
 
 
 if __name__ == "__main__":
